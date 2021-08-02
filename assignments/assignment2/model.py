@@ -17,8 +17,15 @@ class TwoLayerNet:
         reg, float - L2 regularization strength
         """
         self.reg = reg
-        # TODO Create necessary layers
-        raise Exception("Not implemented!")
+        #Create necessary layers
+        self.fully_conected_1 = FullyConnectedLayer(n_input, hidden_layer_size)
+        self.W1 = self.fully_conected_1.params()['W']
+        self.B1 = self.fully_conected_1.params()['B']
+        self.fully_conected_2 = FullyConnectedLayer(hidden_layer_size, n_output)
+        self.W2 = self.fully_conected_2.params()['W']
+        self.B2 = self.fully_conected_2.params()['B']
+        self.relu = ReLULayer()
+
 
     def compute_loss_and_gradients(self, X, y):
         """
@@ -31,16 +38,39 @@ class TwoLayerNet:
         """
         # Before running forward and backward pass through the model,
         # clear parameter gradients aggregated from the previous pass
-        # TODO Set parameter gradient to zeros
+        
+        # Set parameter gradient to zeros
         # Hint: using self.params() might be useful!
-        raise Exception("Not implemented!")
+        for param_key in self.params():
+            param = self.params()[param_key]
+            param.grad = np.zeros_like(param.value)
         
         # TODO Compute loss and fill param gradients
         # by running forward and backward passes through the model
         
+        layer1_res = self.fully_conected_1.forward(X)
+        relu_res = self.relu.forward(layer1_res)
+        layer2_res = self.fully_conected_2.forward(relu_res)
+        loss, d_out = softmax_with_cross_entropy(layer2_res, y)
+
+        d_layer2 = self.fully_conected_2.backward(d_out)
+        d_relu = self.relu.backward(d_layer2)
+        d_layer1 = self.fully_conected_1.backward(d_relu)
+
         # After that, implement l2 regularization on all params
         # Hint: self.params() is useful again!
-        raise Exception("Not implemented!")
+        loss_reg_W1, grad_reg_W1 = l2_regularization(self.W1.value, self.reg)
+        loss_reg_B1, grad_reg_B1 = l2_regularization(self.B1.value, self.reg)
+        loss_reg_W2, grad_reg_W2 = l2_regularization(self.W2.value, self.reg)
+        loss_reg_B2, grad_reg_B2 = l2_regularization(self.B2.value, self.reg)
+        
+        loss_reg = loss_reg_W1 + loss_reg_B1 + loss_reg_W2 + loss_reg_B2
+        loss += loss_reg
+
+        self.W1.grad += grad_reg_W1
+        self.W2.grad += grad_reg_W2
+        self.B1.grad += grad_reg_B1
+        self.B2.grad += grad_reg_B2
 
         return loss
 
@@ -63,10 +93,10 @@ class TwoLayerNet:
         return pred
 
     def params(self):
-        result = {}
+        #result = {}
 
-        # TODO Implement aggregating all of the params
+        # Implement aggregating all of the params
 
-        raise Exception("Not implemented!")
+        result = {'W1': self.W1, 'B1': self.B1, 'W2': self.W2, 'B2': self.B2}
 
         return result
