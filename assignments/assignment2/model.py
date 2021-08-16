@@ -1,6 +1,7 @@
 import numpy as np
+from numpy.core.fromnumeric import argmax
 
-from layers import FullyConnectedLayer, ReLULayer, softmax_with_cross_entropy, l2_regularization
+from layers import FullyConnectedLayer, ReLULayer, softmax_with_cross_entropy, l2_regularization, softmax
 
 
 class TwoLayerNet:
@@ -52,6 +53,8 @@ class TwoLayerNet:
         relu_res = self.relu.forward(layer1_res)
         layer2_res = self.fully_conected_2.forward(relu_res)
         loss, d_out = softmax_with_cross_entropy(layer2_res, y)
+        d_out /= X.shape[0]
+        loss /= X.shape[0]
 
         d_layer2 = self.fully_conected_2.backward(d_out)
         d_relu = self.relu.backward(d_layer2)
@@ -84,12 +87,17 @@ class TwoLayerNet:
         Returns:
           y_pred, np.array of int (test_samples)
         """
-        # TODO: Implement predict
+        # Implement predict
         # Hint: some of the code of the compute_loss_and_gradients
         # can be reused
         pred = np.zeros(X.shape[0], np.int)
+        
+        layer1_res = self.fully_conected_1.forward(X)
+        relu_res = self.relu.forward(layer1_res)
+        layer2_res = self.fully_conected_2.forward(relu_res)
+        softmax_res = softmax(layer2_res)
 
-        raise Exception("Not implemented!")
+        pred = argmax(softmax_res, axis=1)
         return pred
 
     def params(self):

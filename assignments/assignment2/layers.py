@@ -42,7 +42,8 @@ def cross_entropy_loss(probs, target_index):
     grid = np.indices(probs.shape)
     mask = (grid[-1].T == target_index.flatten()).T
     loss_vec = probs[mask] #x where p(x) = 1
-    loss = -np.sum(np.log(loss_vec))
+    loss = -np.sum(np.log(loss_vec)) # / loss_vec.shape[0]
+    #loss = (- np.log(loss_vec)).mean()
     return loss
   
 
@@ -84,7 +85,7 @@ def softmax_with_cross_entropy(predictions, target_index):
     # implement softmax with cross-entropy
     # Your final implementation shouldn't have any loops
     probs = softmax(predictions)
-    loss = cross_entropy_loss(probs, target_index)
+    loss = cross_entropy_loss(probs, target_index) #/ predictions.shape[0]
     
     dprediction = np.zeros_like(predictions)
 
@@ -109,7 +110,9 @@ def softmax_with_cross_entropy(predictions, target_index):
 
     dprediction = (exp_pred / sum_exp).T
     c = sum_exp - e_pgt
-    dprediction[mask] = -c / sum_exp
+    dprediction[mask] = -c / sum_exp 
+
+    dprediction = dprediction #/ predictions.shape[0]
 
     return loss, dprediction
 
@@ -203,9 +206,9 @@ class FullyConnectedLayer:
         X = np.concatenate((self.X, ones), axis=1)
         dWB = np.dot(X.T, d_out)
         dW = dWB[:-1,:]
-        self.W.grad = dW
+        self.W.grad += dW
         dB = (dWB[-1,:])[None,::]
-        self.B.grad = dB
+        self.B.grad += dB
 
         d_input = np.dot(d_out, self.W.value.T)
 
